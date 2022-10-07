@@ -1,13 +1,14 @@
 package main
 
 import (
-	"bytes"
 	"compress/gzip"
 	"io"
 	"os"
 	"strings"
 
 	logger "github.com/sirupsen/logrus"
+
+	"github.com/b24111624/basic-byte-compressor/compressor"
 )
 
 func main() {
@@ -21,21 +22,13 @@ func main() {
 	rc := io.NopCloser(strings.NewReader(testData))
 	defer rc.Close()
 
-	// Prepare output file
-	var buf bytes.Buffer
-	zw := gzip.NewWriter(&buf)
+	var b []byte
+	compressorStore := compressor.NewCompressor(rc)
+	//compressor.NewCompressor(rc)
+	compressorStore.Read(b)
 
-	// Compress data to buffer
-	_, err := io.Copy(zw, rc)
-	if err != nil {
-		logger.WithField("err", err).Fatal("io.Copy failed")
-	}
-
-	if err := zw.Close(); err != nil {
-		logger.WithField("err", err).Fatal("zw.close failed")
-	}
-
-	zr, err := gzip.NewReader(&buf)
+	// ungzip msg to check content
+	zr, err := gzip.NewReader(compressorStore)
 	if err != nil {
 		logger.WithField("err", err).Fatal("gzip.NewReader failed")
 	}
@@ -47,5 +40,4 @@ func main() {
 	if err := zr.Close(); err != nil {
 		logger.WithField("err", err).Fatal("zr.Close failed")
 	}
-
 }
